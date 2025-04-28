@@ -3,6 +3,9 @@ A player castbar replacement as well as a target castbar for World of Warcraft v
 
 <sub>version 3.7</sub>
 
+![WoW 20-20 28 04 2025](https://github.com/user-attachments/assets/34d65f41-b102-4690-aa7a-68ca45f1b8cd)
+
+
 ## Features
   ### Casting bar and target bar
   ![Casting](https://github.com/user-attachments/assets/c76bc1b3-2382-40e4-94d5-8c2bb5533150)
