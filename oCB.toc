@@ -1,0 +1,18 @@
+﻿## Interface: 11200
+## Title: oCB3 |cff7fff7f -Ace2-|r
+## Author: Haste, Athene, Laytya, Roadblock, Shellyoung
+## Notes: A player castbar replacement and target cast bar.
+## Notes-frFR: Remplacement de la barre de cast et barre de cast de cible.
+## Version: 3.7
+## DefaultState: Enabled
+## OptionalDeps: Ace2, DewdropLib
+## LoadOnDemand: 0
+## SavedVariables: oCBDB
+
+oCB.xml
+core.lua
+frame.lua
+casting.lua
+target.lua
+mirror.lua
+RomanNumeralConverter.lua
