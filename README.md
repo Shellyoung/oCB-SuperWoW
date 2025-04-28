@@ -20,9 +20,10 @@ A player castbar replacement as well as a target castbar for World of Warcraft v
   Configuration window have settings for your liking. It can be shown by entering chat command **/ocb**.
 
 ## Installation
-  1. Download the following archive: [oCB.rar](https://github.com/Shellyoung/oCB-Super-WoW-/releases/download/3.7/oCB.rar)
+  1. [Download and install](https://github.com/pepopo978/SuperwowInstallation) SuperWoW.
+  2. Download the following archive: [oCB.rar](https://github.com/Shellyoung/oCB-Super-WoW-/releases/download/3.7/oCB.rar)
   
-  2. Extract the folder	**oCB** from the archive and place it into the folder **World of Warcraft\Interface\Addons**.
+  3. Extract the folder	**oCB** from the archive and place it into the folder **World of Warcraft\Interface\Addons**.
 
 ## Credits
 
