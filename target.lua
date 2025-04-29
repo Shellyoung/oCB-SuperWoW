@@ -746,80 +746,66 @@ function oCB:IsSpellIgnored(spellID)
 end
 
 function oCB:TargetCastStart(casterGUID, targetGUID, eventType, spellID, castDuration)
-	local name, spell, rank, icon
-	
-	if casterGUID == "TargetBar" then
-		name = casterGUID
-		spell = targetGUID
-		icon = "Interface\\Icons\\Trade_Engineering"
-		casttime = 3.5
-	else
-		name = UnitName(casterGUID)
-		spell, rank, icon = SpellInfo(spellID)
+    local name, spell, rank, icon, casttime
+    local db = self.db.profile
+
+    if casterGUID == "TargetBar" then
+        name = casterGUID
+        spell = targetGUID
+        icon = "Interface\\Icons\\Trade_Engineering"
+        casttime = 3.5
+    else
+        name = UnitName(casterGUID) or "Unknown"
+        spell, rank, icon = SpellInfo(spellID)
+        spell = spell or "Unknown"
 		
 		if icon == "Interface\\Icons\\Temp"
 		or icon == "Interface\\Icons\\Spell_Shadow_SealOfKings" then
 			icon = nil
 		end
 		
-		casttime = castDuration / 1000
-	end
-	
-	self:Debug("Target Cast Start. Name == "..name..". Spell == "..spell..". spellID == "..tostring(spellID)..". icon == "..tostring(icon)) --CHANGED added commented
-	
-	local test = not self.db.profile.lock
-	local now = nil
-	local SpellFound = false
-	local silence
-	
-	--local uname = UnitExists("target") and UnitName("target") or name or false
-	_, targetGUID = UnitExists("target")
-	local IsPlayer = UnitExists("target") and UnitIsPlayer("target")
-	
-	if test then
-		if (casterGUID == "TargetBar") and (spell == "Drag me (target)") then
-			now = GetTime()
-			silence = Spells[spell].m
-			Casters[casterGUID] = {cast = spell, starttime = now, casttime = casttime, icon = icon, casting = true, silence = silence}
-			oCB:ShowTargetBar(icon, spell, silence)
-		end
-	else
-		if not ((targetGUID == casterGUID) and not IsPlayer and Casters[casterGUID] and (UnitExists("target") and Casters[casterGUID].casting)) or UnitIsDeadOrGhost("target") then
-			now = GetTime()
+        casttime = castDuration / 1000
+    end
+
+    self:Debug(string.format("Target Cast Start: Name=%s, Spell=%s, SpellID=%s, Icon=%s", name, spell, tostring(spellID), tostring(icon)))
+
+    local test = not db.lock
+    local now = GetTime()
+    local silence, channeling = eventType == "CHANNEL"
+    local exists, targetGUID = UnitExists("target")
+    local IsPlayer = exists and UnitIsPlayer("target")
+
+    if test and casterGUID == "TargetBar" and spell == "Drag me (target)" then
+        silence = Spells[spell] and Spells[spell].m or "silence"
+        Casters[casterGUID] = {cast = spell, starttime = now, casttime = casttime, icon = icon, casting = true, silence = silence}
+        self:ShowTargetBar(icon, spell, silence)
 		
-			local channeling = eventType == "CHANNEL"
-		
-			if Targets[casterGUID] ~= nil then 
-				if Targets[casterGUID].p ~= nil and Targets[casterGUID].p == spell then
-					silence = Targets[casterGUID].m
-				elseif Targets[casterGUID][spell] ~= nil then
-					silence = Targets[casterGUID][spell].m
-				end
-				
-				Casters[casterGUID] = {cast = spell, starttime = now, casttime = casttime, icon = icon, casting = true, silence = silence, channeling = channeling}
-			else
-				if PlayerSpells[spell] ~= nil then
-					silence = PlayerSpells[spell].m
-				end
-				
-				if Spells[spell] ~= nil then
-					silence = Spells[spell].m
-				end
-				
-				Casters[casterGUID] = {cast = spell, starttime = now, casttime = casttime, icon = icon, casting = true, silence = silence, channeling = channeling}
-			end
-			
-			SpellFound = casttime > 0
-				
-			if UnitExists("target") and not UnitIsDeadOrGhost("target") and targetGUID == casterGUID then
-				if SpellFound then
-					oCB:ShowTargetBar(icon, spell, silence, channeling)
-				elseif IsPlayer then
-					oCB:HideTargetBar()
-				end
-			end
-		end
-	end
+        return
+    end
+
+    if not exists or UnitIsDeadOrGhost("target") or (targetGUID == casterGUID and not IsPlayer and Casters[casterGUID] and Casters[casterGUID].casting) then
+        return
+    end
+
+    if Targets[casterGUID] then
+        if Targets[casterGUID].p == spell then
+            silence = Targets[casterGUID].m
+        elseif Targets[casterGUID][spell] then
+            silence = Targets[casterGUID][spell].m
+        end
+    elseif PlayerSpells[spell] then
+        silence = PlayerSpells[spell].m
+    elseif Spells[spell] then
+        silence = Spells[spell].m
+    end
+
+    Casters[casterGUID] = {cast = spell, starttime = now, casttime = casttime, icon = icon, casting = true, silence = silence, channeling = channeling}
+
+    if exists and not UnitIsDeadOrGhost("target") and targetGUID == casterGUID and casttime > 0 then
+        self:ShowTargetBar(icon, spell, silence, channeling)
+    elseif IsPlayer then
+        self:HideTargetBar()
+    end
 end
 
 local fadeOutStart = 0
