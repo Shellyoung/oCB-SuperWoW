@@ -771,7 +771,8 @@ function oCB:TargetCastStart(casterGUID, targetGUID, eventType, spellID, castDur
 
     local test = not db.lock
     local now = GetTime()
-    local silence, channeling = eventType == "CHANNEL"
+    local silence
+	local channeling = eventType == "CHANNEL"
     local exists, targetGUID = UnitExists("target")
     local IsPlayer = exists and UnitIsPlayer("target")
 
@@ -801,11 +802,13 @@ function oCB:TargetCastStart(casterGUID, targetGUID, eventType, spellID, castDur
 
     Casters[casterGUID] = {cast = spell, starttime = now, casttime = casttime, icon = icon, casting = true, silence = silence, channeling = channeling}
 
-    if exists and not UnitIsDeadOrGhost("target") and targetGUID == casterGUID and casttime > 0 then
-        self:ShowTargetBar(icon, spell, silence, channeling)
-    elseif IsPlayer then
-        self:HideTargetBar()
-    end
+    if exists and not UnitIsDeadOrGhost("target") and targetGUID == casterGUID then
+		if casttime > 0 then
+			self:ShowTargetBar(icon, spell, silence, channeling)
+		elseif IsPlayer then
+			self:HideTargetBar()
+		end
+	end
 end
 
 local fadeOutStart = 0
