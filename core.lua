@@ -1298,13 +1298,23 @@ end
 
 --Functions routing
 function oCB:StartCast(casterGUID, targetGUID, eventType, spellID, castDuration)
+	local spell, rank, icon = SpellInfo(spellID)
+	
+	if spellID == 22810 then --Opening - No Text
+		spellID = 3365 --Opening
+		spell = SpellInfo(spellID)
+	end
+	
+	if icon == "Interface\\Icons\\Temp"
+	or icon == "Interface\\Icons\\Spell_Shadow_SealOfKings" then
+		icon = nil
+	end
+
 	if eventType == "START" or eventType == "CHANNEL" or casterGUID == "TargetBar" then
 		if eventType == "START" then
 			local _, playerGUID = UnitExists("player")
 			
 			if casterGUID == playerGUID then
-				local spell, rank, icon = SpellInfo(spellID)
-				
 				oCB:SpellStart(spell, castDuration, false, false, icon)
 			end
 		end

@@ -757,10 +757,6 @@ function oCB:TargetCastStart(casterGUID, targetGUID, eventType, spellID, castDur
 		name = UnitName(casterGUID)
 		spell, rank, icon = SpellInfo(spellID)
 		
-		if spellID == 22810 then --Opening - No Text
-			spell = SpellInfo(3365) --Opening
-		end
-		
 		if icon == "Interface\\Icons\\Temp"
 		or icon == "Interface\\Icons\\Spell_Shadow_SealOfKings" then
 			icon = nil
