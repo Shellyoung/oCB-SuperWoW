@@ -88,14 +88,14 @@ local Default				= {
 	Colors						= {
 		Complete				= {r=0.1, g=1, b=0.1},
 		Casting					= {r=0.47, g=0.46, b=0.49},
-		Channel					= {r=0.3, g=0.3, b=1},
-		Failed					= {r=0.7, g=0, b=0},
+		Channel					= {r=0, g=0.3, b=1},
+		Failed					= {r=0.6, g=0, b=0},
 		TargetCasting			= {r=1, g=204/255, b=0},
-		TargetChannel		= {r=0, g=0, b=0},
+		TargetChannel		= {r=0, g=0.3, b=1},
 		TargetComplete 		= {r=0.1, g=1, b=0.1}, -- cast finished ("success" for friendlies, "fail" for enemies)
 		TargetStopped		= {r=1, g=0.07, b=0}, -- cast interrupted ("fail" for friendlies, "success" for enemies)
 		FlyingTransport 		= {r=0.65, g=0.9, b=1},
-		Unsilenceable 			= {r=0.4, g=0.4, b=0.4},
+		Unsilenceable 			= {r=0.7, g=0.7, b=0.7},
 	},
 	Mirror				= {
 		EXHAUSTION 		= {r=1, g=0.9, b=0},
