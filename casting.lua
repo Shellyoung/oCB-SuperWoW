@@ -248,7 +248,11 @@ function oCB:OnCasting()
 		
 		sp = ((b - oCB.startTime) / (oCB.endTime - oCB.startTime)) * w
 		
-		Bar.Time:SetText(oCB:FormatTime(math.max(oCB.maxValue - Now, 0)))
+		if db.TimeFormat == "4.5 / 10" then
+			Bar.Time:SetText(oCB:FormatTime(math.max(oCB.maxValue - Now, 0)).." / "..oCB:FormatTime(oCB.maxValue-oCB.startTime))
+		elseif db.TimeFormat == "4.5" then
+			Bar.Time:SetText(oCB:FormatTime(math.max(oCB.maxValue - Now, 0)))
+		end
 		
 		if oCB.delay and oCB.delay ~= 0 then
 			Bar.Delay:SetText("-" .. string.format("%.1f", oCB.delay ))

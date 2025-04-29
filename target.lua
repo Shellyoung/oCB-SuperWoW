@@ -868,16 +868,13 @@ function oCB:OnTargetCasting()
 				end
 				
 				local channeling = Casters[targetGUID] and Casters[targetGUID].channeling
-				local timeleft
+				local timeleft = casttime - (now - starttime)
 				
 				if channeling then
 					Bar.Bar:SetValue(casttime - val)
-					timeleft = casttime - (now - starttime)
 					sp = (1 - (val/casttime)) * w
 				else
 					Bar.Bar:SetValue(val)
-					timeleft = now - starttime
-					
 				end
 				
 				if db.TimeFormat == "4.5 / 10" then
