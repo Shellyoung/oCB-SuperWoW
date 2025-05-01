@@ -783,12 +783,8 @@ function oCB:TargetCastStart(casterGUID, targetGUID, eventType, spellID, castDur
 		
         return
     end
-
-    if not exists or UnitIsDeadOrGhost("target") or (targetGUID == casterGUID and not IsPlayer and Casters[casterGUID] and Casters[casterGUID].casting) then
-        return
-    end
-
-    if Targets[casterGUID] then
+	
+	if Targets[casterGUID] then
         if Targets[casterGUID].p == spell then
             silence = Targets[casterGUID].m
         elseif Targets[casterGUID][spell] then
