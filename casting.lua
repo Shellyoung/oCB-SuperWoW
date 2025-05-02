@@ -90,11 +90,20 @@ function oCB:SpellStart(s, d, dIsInSeconds, dontRegister, externalIcon)
         Bar.Icon.Texture:SetTexture(icon)
     end
 
-    -- Обработка ранга заклинания
-    if oCBRank and db.CastingBar.spellShowRank and self:IsSpell(s, oCBRank) then
-        local rank = db.CastingBar.spellRomanRank and tonumber(oCBRank) and ArabicToRoman(tonumber(oCBRank)) or oCBRank
+    -- Spell rank
+    if db.CastingBar.spellShowRank and oCBRank then
+		local function getRankNumber(rankString)
+			local number = string.gsub(rankString, string.gsub(RANK_COLON, ":", "") .. " (%d+)", "%1")
+			return tonumber(number)
+		end
 		
-        s = s .. " " .. (db.CastingBar.spellShortRank and rank or string.format(string.gsub(RANK_COLON, ":", "%%s"), rank))
+		local rank = getRankNumber(oCBRank)
+		
+		if db.CastingBar.spellRomanRank then
+			rank = ArabicToRoman(rank)
+		end
+		
+        s = s .. " (" .. (db.CastingBar.spellShortRank and rank or string.format(string.gsub(RANK_COLON, ":", " %%s"), rank)) .. ")"
     end
 
     Bar.Spell:SetText(s)

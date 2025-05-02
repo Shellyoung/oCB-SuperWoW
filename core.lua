@@ -1315,6 +1315,7 @@ function oCB:StartCast(casterGUID, targetGUID, eventType, spellID, castDuration)
 			local _, playerGUID = UnitExists("player")
 			
 			if casterGUID == playerGUID then
+				oCBRank = rank
 				oCB:SpellStart(spell, castDuration, false, false, icon)
 			end
 		end

@@ -55,7 +55,7 @@ function oCB:Layout(b, s)
 	self.frames[b].Bar:SetPoint("RIGHT", self.frames[b], "RIGHT", -3, 0)
 	self.frames[b].Bar:SetWidth(db.width)
 	self.frames[b].Bar:SetHeight(db.height+3)
-	self.frames[b].Bar:SetFrameLevel(1) --CHANGED from 2
+	self.frames[b].Bar:SetFrameLevel(1)
 	self.frames[b].Bar:SetStatusBarTexture(self.Textures[db.texture])
 	
 	self.frames[b].BarBackground:SetAllPoints(self.frames[b].Bar)
@@ -125,7 +125,7 @@ function oCB:Layout(b, s)
 	self.frames[b].Time:SetShadowOffset(db.timeFontShadowOffsetX, db.timeFontShadowOffsetY)
 	self.frames[b].Time:SetText("Xx.Y / Xx.Y")
 	self.frames[b].Time:ClearAllPoints()
-	self.frames[b].Time:SetPoint("RIGHT", self.frames[b].Bar, "RIGHT",-8,1) --CHANGED from 2
+	self.frames[b].Time:SetPoint("RIGHT", self.frames[b].Bar, "RIGHT",-8,1)
 	
 	self.frames[b].Spell:SetJustifyH("LEFT")
 	self.frames[b].Spell:SetWidth(db.width-self.frames[b].Time:GetWidth())
@@ -166,9 +166,9 @@ function oCB:Layout(b, s)
 		self.frames[b].Delay:SetShadowOffset(db.delayFontShadowOffsetX, db.delayFontShadowOffsetY)
 		self.frames[b].Delay:SetText("X.Y")
 		self.frames[b].Delay:ClearAllPoints()
-		self.frames[b].Delay:SetPoint("RIGHT", self.frames[b], "RIGHT",-(db.width*(db.delayOffset/100)),1) --CHANGED from 2
+		self.frames[b].Delay:SetPoint("RIGHT", self.frames[b], "RIGHT",-(db.width*(db.delayOffset/100)),1)
 		
-		self.frames[b].Latency:SetTextColor(0.36,0.36,0.36,0) --CHANGED alpha from 1
+		self.frames[b].Latency:SetTextColor(0.36,0.36,0.36,0)
 		self.frames[b].Latency:SetJustifyH("RIGHT")
 		self.frames[b].Latency:SetFont(self.Fonts[db.latencyFont], db.latencySize, (self.Outlines[db.latencyOutline])..(db.latencyFontMonochrome and "MONOCHROME" or ""))
 		self.frames[b].Latency:SetShadowColor( 0, 0, 0, 0)
