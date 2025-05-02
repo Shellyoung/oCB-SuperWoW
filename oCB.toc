@@ -1,6 +1,6 @@
 ﻿## Interface: 11200
 ## Title: oCB3 |cff7fff7f -Ace2-|r
-## Author: Haste, Athene, Laytya, Roadblock, Shellyoung
+## Author: Haste, Athene, Laytya, Roadblock, Shellyoung, Grok (xAI)
 ## Notes: A player castbar replacement and target cast bar.
 ## Notes-frFR: Remplacement de la barre de cast et barre de cast de cible.
 ## Version: 3.7
