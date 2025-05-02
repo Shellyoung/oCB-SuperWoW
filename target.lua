@@ -796,7 +796,7 @@ function oCB:TargetCastStart(casterGUID, targetGUID, eventType, spellID, castDur
         silence = Spells[spell].m
     end
 
-    Casters[casterGUID] = {cast = spell, starttime = now, casttime = casttime, icon = icon, casting = true, silence = silence, channeling = channeling}
+    Casters[casterGUID] = {cast = spell, spellID = spellID, starttime = now, casttime = casttime, icon = icon, casting = true, silence = silence, channeling = channeling}
 
     if exists and not UnitIsDeadOrGhost("target") and targetGUID == casterGUID then
 		if casttime > 0 then
@@ -975,7 +975,10 @@ function oCB:TargetCastStop(casterGUID, targetGUID, eventType, spellID, castDura
 		Bar.Bar:SetStatusBarColor(c.r, c.g, c.b)
 		oCB.targetFadeOut = 1
 		fadeOutStart = GetTime()
-	elseif (Casters[casterGUID] and Casters[casterGUID].cast == spell and (Casters[casterGUID].casting or spell == "Drag me (target)")) then
+	elseif (Casters[casterGUID] 
+	and Casters[casterGUID].cast == spell
+	and Casters[casterGUID].spellID == spellID
+	and (Casters[casterGUID].casting or spell == "Drag me (target)")) then
 		Casters[casterGUID] = nil
 		
 		if casterGUID == target then
