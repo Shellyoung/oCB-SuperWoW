@@ -103,7 +103,7 @@ function oCB:SpellStart(s, d, dIsInSeconds, dontRegister, externalIcon)
 			rank = ArabicToRoman(rank)
 		end
 		
-        s = s .. " (" .. (db.CastingBar.spellShortRank and rank or string.format(string.gsub(RANK_COLON, ":", " %%s"), rank)) .. ")"
+        s = s .. " " .. (db.CastingBar.spellShortRank and rank or "("..string.format(string.gsub(RANK_COLON, ":", " %%s"), rank)..")")
     end
 
     Bar.Spell:SetText(s)
