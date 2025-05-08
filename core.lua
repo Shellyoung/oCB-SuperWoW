@@ -215,11 +215,13 @@ local _, PlayerClass 	= UnitClass("player")
 function oCB:ShowTest()
 	oCBCastSent = GetTime()-0.666
 	oCBIcon="Interface\\Icons\\Trade_Engineering"
+
 	self:SpellStart("Drag me", 3.5, true, true)
 	self:SpellDelayed(0.5)
 	self:TargetCastStart("TargetBar", "Drag me (target)")
 	self:MIRROR_TIMER_START("EXHAUSTION", 0, 10, 1, 0, EXHAUSTION_LABEL)
 	self:MIRROR_TIMER_START("BREATH", 0, 10, 1, 0, BREATH_LABEL)
+
 	if PlayerClass == "HUNTER" then
 		self:MIRROR_TIMER_START("FEIGNDEATH", 0, 10, 1, 0, BS["Feign Death"])
 	end
@@ -234,6 +236,7 @@ function oCB:HideTest()
 	self:TargetCastStop("TargetBar", "Drag me (target)")
 	self:MIRROR_TIMER_STOP("EXHAUSTION")
 	self:MIRROR_TIMER_STOP("BREATH")
+	
 	if PlayerClass == "HUNTER" then
 		self:MIRROR_TIMER_STOP("FEIGNDEATH")
 	end
@@ -1304,9 +1307,11 @@ function oCB:StartCast(casterGUID, targetGUID, eventType, spellID, castDuration)
 		spellID = 3365 --Opening
 		spell = SpellInfo(spellID)
 	end
-	
+
 	if icon == "Interface\\Icons\\Temp"
-	or icon == "Interface\\Icons\\Spell_Shadow_SealOfKings" then
+	or icon == "Interface\\Icons\\Spell_Shadow_SealOfKings"
+	or icon == "Interface\\Icons\\Ability_Ensnare"
+	or icon == "Interface\\Icons\\Spell_Nature_DryadDispelMagic" then
 		icon = nil
 	end
 
