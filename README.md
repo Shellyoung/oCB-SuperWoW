@@ -24,10 +24,9 @@ A player castbar replacement as well as a target castbar for World of Warcraft v
 
 ## Installation
   1. [Download and install](https://github.com/pepopo978/SuperwowInstallation) SuperWoW.
-  2. Download libraries for addons: [Libs.rar](https://github.com/Shellyoung/oCB-SuperWoW/releases/download/3.7/Libs.rar). They provide vital functions for various settings menus.
-  3. Download the addon archive: [oCB.rar](https://github.com/Shellyoung/oCB-Super-WoW/releases/download/3.7/oCB.rar).
+  2. Download the addon archive: [oCB.rar](https://github.com/Shellyoung/oCB-Super-WoW/releases/download/3.7/oCB.rar).
   
-  4. Extract the folders	**oCB** and **!Libs** from the archives and place them into the folder **World of Warcraft\Interface\Addons**.
+  3. Extract the folder	**oCB** from the archive and place it into the folder **World of Warcraft\Interface\Addons**.
 
 ## Credits
 
