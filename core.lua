@@ -210,6 +210,10 @@ oCB = AceLibrary("AceAddon-2.0"):new("AceEvent-2.0", "AceDebug-2.0", "AceHook-2.
 local waterfall 		= AceLibrary("Waterfall-1.0")
 local PlayerClass 	= UnitClass("player")
 
+local function IconPath(Icon)
+	return 'Interface\\Icons\\' .. Icon
+end
+
 local AtlasLootCache = {}
 
 function oCB:AtlasLootSearch(spellID)
@@ -225,7 +229,7 @@ function oCB:AtlasLootSearch(spellID)
 		-- Items is the table
 		for Profession, Items in pairs(T) do
 			for I = 1, getn(Items) do
-				local ID = string_gsub(Items[I][1], '%D', '')
+				local ID = string.gsub(Items[I][1], '%D', '')
 				-- i is a string with spell information
 				-- 1 is spellID
 				-- 2 is the icon name
@@ -261,7 +265,7 @@ function oCB:AtlasLootSearch(spellID)
 						return P
 					end
 					
-					Cache.Icon = Icon(Items[I][2])
+					Cache.Icon = IconPath(Items[I][2])
 					Cache.Quality = GetQuality(Items[I][3])
 					Cache.Profession = GetProfession(Profession)
 					
@@ -1363,10 +1367,6 @@ function oCB:Events()
     self:RegisterEvent("PLAYER_TARGET_CHANGED", "TargetChanged")
 	
 	UIParent:UnregisterEvent("MIRROR_TIMER_START")
-end
-
-local function IconPath(Icon)
-	return 'Interface\\Icons\\' .. Icon
 end
 
 function oCB:GetSpellIcon(spellID, spellName)
