@@ -1408,7 +1408,7 @@ function oCB:GetSpellIcon(spellID, spellName)
     end
 	
 	if not icon then
-		local Atlas = AtlasLootSearch(spellID)
+		local Atlas = oCB:AtlasLootSearch(spellID)
 		
 		icon = Atlas and Atlas.Icon
 	end
