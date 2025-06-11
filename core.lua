@@ -207,22 +207,88 @@ local Fonts 		= {
 }
 
 oCB = AceLibrary("AceAddon-2.0"):new("AceEvent-2.0", "AceDebug-2.0", "AceHook-2.0", "AceDB-2.0", "AceConsole-2.0")
-local BS 				= AceLibrary("Babble-Spell-2.3")
 local waterfall 		= AceLibrary("Waterfall-1.0")
-local _, PlayerClass 	= UnitClass("player")
+local PlayerClass 	= UnitClass("player")
 
+local AtlasLootCache = {}
+
+function oCB:AtlasLootSearch(spellID)
+	if AtlasLootCache[spellID] then
+		return AtlasLootCache[spellID]
+	end
+
+	-- Get icon from AtlatLoot addon if present
+	if AtlasLoot_Data and AtlasLoot_Data['AtlasLootCrafting'] then
+		local T = AtlasLoot_Data['AtlasLootCrafting']
+
+		-- Profession is the name of the table, like JewelcraftingApprentice1
+		-- Items is the table
+		for Profession, Items in pairs(T) do
+			for I = 1, getn(Items) do
+				local ID = string_gsub(Items[I][1], '%D', '')
+				-- i is a string with spell information
+				-- 1 is spellID
+				-- 2 is the icon name
+				-- 3 is item quality and item name
+
+				if ID == tostring(spellID) then
+					local Cache = {}
+					
+					local function GetQuality(s)
+						local C
+						local QualityColors = {
+							[1] = {	R = 1,		G = 1, 		B = 1		}, -- common
+							[2] = {	R = 0.12,	G = 1, 		B = 0		}, -- uncommon
+							[3] = {	R = 0,		G = 0.44, 	B = 0.87	}, -- rare
+							[4] = {	R = 0.64,	G = 0.21, 	B = 0.93	}, -- epic
+							[5] = {	R = 1,		G = 0.5, 	B = 0		}, -- legendary
+						}
+						
+						local _, _, Q = string.find(s, '=q(%d+)')
+						
+						if Q then
+							C = QualityColors[tonumber(Q)]
+						end
+						
+						return C
+					end
+					
+					local function GetProfession(Table)
+						local P = AtlasLoot_TableNames[Table][1]
+						local colonIndex = string.find(P, ':')
+						local P = (colonIndex and string.sub(P, 1, colonIndex - 1)) or P
+						
+						return P
+					end
+					
+					Cache.Icon = Icon(Items[I][2])
+					Cache.Quality = GetQuality(Items[I][3])
+					Cache.Profession = GetProfession(Profession)
+					
+					AtlasLootCache[spellID] = Cache
+
+					return AtlasLootCache[spellID]
+				end
+			end
+		end
+	end
+	
+	AtlasLootCache[spellID] = {Icon = nil, Quality = nil, Profession = nil}
+	
+	return AtlasLootCache[spellID]
+end
 
 function oCB:ShowTest()
-	oCBCastSent = GetTime()-0.666
+	oCBCastSent = GetTime() - 0.666
 	oCBIcon="Interface\\Icons\\Trade_Engineering"
 
-	self:SpellStart("Drag me", 3.5, true, true)
+	self:CastStart("Drag me", 3.5, true, true)
 	self:SpellDelayed(0.5)
 	self:TargetCastStart("TargetBar", "Drag me (target)")
 	self:MIRROR_TIMER_START("EXHAUSTION", 0, 10, 1, 0, EXHAUSTION_LABEL)
 	self:MIRROR_TIMER_START("BREATH", 0, 10, 1, 0, BREATH_LABEL)
 
-	if PlayerClass == "HUNTER" then
+	if PlayerClass == "Hunter" then
 		self:MIRROR_TIMER_START("FEIGNDEATH", 0, 10, 1, 0, BS["Feign Death"])
 	end
 
@@ -237,7 +303,7 @@ function oCB:HideTest()
 	self:MIRROR_TIMER_STOP("EXHAUSTION")
 	self:MIRROR_TIMER_STOP("BREATH")
 	
-	if PlayerClass == "HUNTER" then
+	if PlayerClass == "Hunter" then
 		self:MIRROR_TIMER_STOP("FEIGNDEATH")
 	end
 
@@ -1284,7 +1350,7 @@ function oCB:OnEnable()
 end
 
 function oCB:Events()
-	self:RegisterEvent("UNIT_CASTEVENT", "StartCast")
+	self:RegisterEvent("UNIT_CASTEVENT", "CastEvent")
 
 	self:RegisterEvent("SPELLCAST_CHANNEL_START", "SpellChannelStart")
 	self:RegisterEvent("SPELLCAST_CHANNEL_STOP", "SpellChannelStop")
@@ -1299,47 +1365,88 @@ function oCB:Events()
 	UIParent:UnregisterEvent("MIRROR_TIMER_START")
 end
 
---Functions routing
-function oCB:StartCast(casterGUID, targetGUID, eventType, spellID, castDuration)
-	local spell, rank, icon = SpellInfo(spellID)
+local function IconPath(Icon)
+	return 'Interface\\Icons\\' .. Icon
+end
+
+function oCB:GetSpellIcon(spellID, spellName)
+    if not spellID and not spellName then
+        return IconPath("Trade_Engineering"), false
+    end
+
+    local icon, isItem = nil, false
+    local name, _, spellIcon = SpellInfo(spellID)
+    name = name or spellName or ""
+
+    -- Check if opening or use of item
+    if name == "Opening" or name == "Opening - No Text" then
+        local tooltipText = getglobal("GameTooltipTextLeft1"):GetText() or ""
+        icon = self:FindItemIcon(tooltipText) or spellIcon
+        isItem = icon ~= spellIcon
+    else
+        icon = self:FindItemIcon(name) or spellIcon
+        isItem = icon ~= spellIcon
+    end
 	
-	if spellID == 22810 then --Opening - No Text
-		spellID = 3365 --Opening
+	if spellID == 8690 then 
+		icon = IconPath('INV_Misc_Rune_01') -- Hearthstone fix
+	elseif spellID == 22810 then -- Change Opening - No Text to
+		spellID = 3365 -- Opening
 		spell = SpellInfo(spellID)
 	end
-
-	if icon == "Interface\\Icons\\Temp"
-	or icon == "Interface\\Icons\\Spell_Shadow_SealOfKings"
-	or icon == "Interface\\Icons\\Ability_Ensnare"
-	or icon == "Interface\\Icons\\Spell_Nature_DryadDispelMagic" then
-		icon = nil
+	
+	if not icon then
+		icon = IconPath('INV_Misc_QuestionMark')
 	end
 
-	if eventType == "START" or eventType == "CHANNEL" or casterGUID == "TargetBar" then
-		if eventType == "START" then
-			local _, playerGUID = UnitExists("player")
-			
-			if casterGUID == playerGUID then
-				oCBRank = rank
-				oCB:SpellStart(spell, castDuration, false, false, icon)
-			end
-		end
+    -- Stub replacement
+    if icon == IconPath("Temp")
+	or icon == IconPath("Spell_Shadow_SealOfKings")
+	or icon == IconPath("Ability_Ensnare")
+	or icon == IconPath("Spell_Nature_DryadDispelMagic") then
+        icon = oCBIcon or nil
+    end
+	
+	if not icon then
+		local Atlas = AtlasLootSearch(spellID)
 		
-		self:Debug(string.format("SpellStart - ID: %s", spellID))
-		oCB:TargetCastStart(casterGUID, targetGUID, eventType, spellID, castDuration)
-	elseif eventType == "CAST" or eventType == "FAIL" or oCB:IsInstantCastsAllowed(eventType) then
-		if oCB.CastMode == OCB_CAST_SUCCESS then
-			if eventType == "CAST" then
-				oCB.CastMode = OCB_FADEOUT
-				oCB.frames.CastingBar:Show()
-				oCB:TargetBarIfTargetIsPlayer("SHOW")
-			elseif eventType == "FAIL" then
-				oCB.CastMode = nil
-			end
-		end
-		
-		oCB:TargetCastStop(casterGUID, targetGUID, eventType, spellID, castDuration)
+		icon = Atlas and Atlas.Icon
 	end
+
+    return icon or IconPath("Trade_Engineering"), isItem
+end
+
+--Functions routing
+function oCB:CastEvent(casterGUID, targetGUID, eventType, spellID, castDuration)
+    local spell, rank = SpellInfo(spellID)
+    
+    self:Debug("------------------------------------------")
+    self:Debug(string.format("CastEvent - SpellID: %d, Spell: %s, Rank: %s", spellID, tostring(spell), tostring(rank)))
+    
+    if eventType == "START" or eventType == "CHANNEL" or casterGUID == "TargetBar" then
+        if eventType == "START" then
+            local _, playerGUID = UnitExists("player")
+            
+            if casterGUID == playerGUID then
+                oCBRank = rank
+                oCB:CastStart(spellID, castDuration, false)
+            end
+        end
+        
+        oCB:TargetCastStart(casterGUID, targetGUID, eventType, spellID, castDuration)
+    elseif eventType == "CAST" or eventType == "FAIL" or oCB:IsInstantCastsAllowed(eventType) then
+        if oCB.CastMode == OCB_CAST_SUCCESS then
+            if eventType == "CAST" then
+                oCB.CastMode = OCB_FADEOUT
+                oCB.frames.CastingBar:Show()
+                oCB:TargetBarIfTargetIsPlayer("SHOW")
+            elseif eventType == "FAIL" then
+                oCB.CastMode = nil
+            end
+        end
+        
+        oCB:TargetCastStop(casterGUID, targetGUID, eventType, spellID)
+    end
 end
 
 --sentry compatibility fix
@@ -1390,108 +1497,8 @@ function oCB:Split(msg, char)
 	return arr
 end
 
-function oCB:GetSpellNameRankFromName(spell)
-	local name, rank
-	local START, END = "(Rank ", ")"
-	
-	if spell and type(spell) == "string" then
-		local HasRank = string.find(spell, "%"..START)
-		
-		if HasRank then
-			rank = tonumber(string.sub(spell, HasRank+string.len(START), -(1+string.len(END))))
-			name = string.sub(spell, 1, -(1+string.len(START)+string.len(tostring(rank))+string.len(END)))
-		else
-			name = spell
-		end
-	end
-	
-	return name, rank
-end
-
--- cast spell by name hook - Athene edit
-oCB_Original_CastSpellByName = CastSpellByName
-function oCB.CastSpellByName(spell, onSelf)	
-	if spell and type(spell) == "string" then
-		oCBName, oCBRank = oCB:GetSpellNameRankFromName(spell)
-		oCBIcon = BS:GetSpellIcon(oCBName)
-	end
-	
-	if getglobal("GameTooltipTextLeft1"):GetText() then
-		oCBTooltip = getglobal("GameTooltipTextLeft1"):GetText()
-	end
-	
-	oCBCastSent = GetTime()
-	
-	oCB_Original_CastSpellByName(spell, onSelf)
-end
-CastSpellByName = oCB.CastSpellByName
-
--- cast spell hook - Athene edit
-oCB_Original_CastSpell = CastSpell
-function oCB.CastSpell(spell, onSelf)	
-	if spell and type(spell) == "string" then
-		oCBName, oCBRank = oCB:GetSpellNameRankFromName(spell)
-		oCBIcon = BS:GetSpellIcon(oCBName)
-	end
-	
-	if getglobal("GameTooltipTextLeft1"):GetText() then
-		oCBTooltip = getglobal("GameTooltipTextLeft1"):GetText()
-	end
-	
-	oCBCastSent = GetTime()
-	
-	oCB_Original_CastSpell(spell, onSelf)
-end
-CastSpell = oCB.CastSpell
-
--- Use Action hook - Athene edit
-oCB_Original_UseAction = UseAction
-function oCB.UseAction(p1,p2,p3)
-	if p1 then
-		oCBIcon = GetActionTexture(p1)
-		oCBRank, oCBName = oCB:GetSpellNameRankFromTooltip(p1)
-	else
-		oCBRank = nil
-	end
-	
-	if getglobal("GameTooltipTextLeft1"):GetText() then
-		oCBTooltip = getglobal("GameTooltipTextLeft1"):GetText()
-	end
-	
-	oCBCastSent = GetTime()
-	
-	oCB_Original_UseAction(p1,p2,p3)
-end
-UseAction = oCB.UseAction
-
-oCB_Original_UseInventoryItem = UseInventoryItem
-function oCB.UseInventoryItem(slotID)	
-	local itemLink = GetInventoryItemLink("player", slotID)
-	
-	oCBName = ItemLinkToName(itemLink)
-	oCBIcon = oCB:GetSpellIcon(oCBName)
-	
-	oCB_Original_UseInventoryItem(slotID)
-end
-UseInventoryItem = oCB.UseInventoryItem
-
 function ItemLinkToName(link)
 	return gsub(link,"^.*%[(.*)%].*$","%1")
-end
-
-function oCB:GetSpellNameRankFromTooltip(slot)
-	oCB_TooltipTextLeft1:SetText()
-	oCB_TooltipTextRight1:SetText()
-	oCB_Tooltip:SetAction(slot)
-	
-	local start, stop, name, rank
-	
-	name = oCB_TooltipTextLeft1:GetText()
-	rank = oCB_TooltipTextRight1:GetText()
-	
-	start, stop, rank = string.find((rank or ""), "(%d+)")
-	
-	return rank, name
 end
 
 function oCB:IsSpell(spell, rank)

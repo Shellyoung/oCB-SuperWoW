@@ -749,23 +749,18 @@ function oCB:TargetCastStart(casterGUID, targetGUID, eventType, spellID, castDur
     local name, spell, rank, icon, casttime
     local db = self.db.profile
 
-    if casterGUID == "TargetBar" then
-        name = casterGUID
-        spell = targetGUID
-        icon = "Interface\\Icons\\Trade_Engineering"
-        casttime = 3.5
-    else
-        name = UnitName(casterGUID) or "Unknown"
-        spell, rank, icon = SpellInfo(spellID)
-        spell = spell or "Unknown"
-		
-		if icon == "Interface\\Icons\\Temp"
-		or icon == "Interface\\Icons\\Spell_Shadow_SealOfKings" then
-			icon = nil
-		end
-		
-        casttime = castDuration / 1000
-    end
+	if casterGUID == "TargetBar" then
+		name = casterGUID
+		spell = targetGUID
+		icon = "Interface\\Icons\\Trade_Engineering"
+		casttime = 3.5
+	else
+		name = UnitName(casterGUID) or "Unknown"
+		spell, rank = SpellInfo(spellID)
+		spell = spell or "Unknown"
+		icon = self:GetSpellIcon(spellID, spell)
+		casttime = castDuration / 1000
+	end
 
     self:Debug(string.format("Target Cast Start: Name=%s, Spell=%s, SpellID=%s, Icon=%s", name, spell, tostring(spellID), tostring(icon)))
 
@@ -809,7 +804,7 @@ end
 
 local fadeOutStart = 0
 
-function oCB:OnTargetCasting()	
+function oCB:OnTargetCasting()
 	elapsed = elapsed + arg1
 	
 	local color
@@ -934,19 +929,16 @@ function oCB:TargetCastStop(casterGUID, targetGUID, eventType, spellID, castDura
 	
 	if casterGUID == "TargetBar" then
 		name = casterGUID
-		target = casterGUID		
+		target = casterGUID
 		spell = targetGUID
 	else
-		spell, _, icon = SpellInfo(spellID)
+		spell, _, _ = SpellInfo(spellID)
+		icon = self:GetSpellIcon(spellID, spell)
 		
-		if icon == "Interface\\Icons\\Temp" then
-			if spellID == 6603 then
-				icon = "Interface\\Icons\\inv_sword_04"
-			end
-		end
-		
-		if spellID == 22810 then --Opening - No Text
-			spell = SpellInfo(3365) --Opening
+		if spellID == 6603 then
+			icon = "Interface\\Icons\\inv_sword_04"
+		elseif spellID == 22810 then
+			spell = SpellInfo(3365) -- Opening
 		end
 		
 		name = UnitName(casterGUID)
@@ -957,7 +949,10 @@ function oCB:TargetCastStop(casterGUID, targetGUID, eventType, spellID, castDura
 		return
 	end
 	
-	if not Casters[casterGUID] and casterGUID == target and not oCB:IsSpellIgnored(spellID) and oCB.db.profile.TargetBar.showInstantCasts then -- Instant cast
+	local caster = Casters[casterGUID]
+	
+	if not caster and casterGUID == target and not oCB:IsSpellIgnored(spellID) and oCB.db.profile.TargetBar.showInstantCasts then
+		-- Instant cast
 		oCB:ShowTargetBar(icon, spell)
 		Bar.Bar:SetMinMaxValues(0, 1)
 		Bar.Bar:SetValue(1)
@@ -975,10 +970,8 @@ function oCB:TargetCastStop(casterGUID, targetGUID, eventType, spellID, castDura
 		Bar.Bar:SetStatusBarColor(c.r, c.g, c.b)
 		oCB.targetFadeOut = 1
 		fadeOutStart = GetTime()
-	elseif (Casters[casterGUID] 
-	and Casters[casterGUID].cast == spell
-	and Casters[casterGUID].spellID == spellID
-	and (Casters[casterGUID].casting or spell == "Drag me (target)")) then
+	elseif (caster and caster.cast == spell and caster.spellID == spellID and (caster.casting or spell == "Drag me (target)")) then
+		-- Cast
 		Casters[casterGUID] = nil
 		
 		if casterGUID == target then
@@ -993,6 +986,6 @@ function oCB:TargetCastStop(casterGUID, targetGUID, eventType, spellID, castDura
 			end
 		end
 		
-		self:Debug("Target Cast Stop. Target == "..name..". Spell == "..spell..".")
+		self:Debug("Target Cast Stop. Target == "..tostring(name)..". Spell == "..tostring(spell)..".")
 	end
 end

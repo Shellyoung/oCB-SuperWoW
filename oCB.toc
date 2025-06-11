@@ -3,7 +3,7 @@
 ## Author: Haste, Athene, Laytya, Roadblock, Shellyoung, Grok (xAI)
 ## Notes: A player castbar replacement and target cast bar.
 ## Notes-frFR: Remplacement de la barre de cast et barre de cast de cible.
-## Version: 3.7
+## Version: 3.8
 ## DefaultState: Enabled
 ## OptionalDeps: Ace2, DewdropLib
 ## LoadOnDemand: 0
@@ -18,8 +18,8 @@ Libraries\AceEvent-2.0\AceEvent-2.0.lua
 Libraries\AceHook-2.0\AceHook-2.0.lua
 Libraries\AceAddon-2.0\AceAddon-2.0.lua
 Libraries\AceLocale-2.2\AceLocale-2.2.lua
-Libraries\Dewdrop-2.0\Dewdrop-2.0.lua
 Libraries\Babble-Spell-2.3\Babble-Spell-2.3.lua
+Libraries\Dewdrop-2.0\Dewdrop-2.0.lua
 Libraries\Waterfall-1.0\Waterfall-1.0.lua
 
 oCB.xml
@@ -28,4 +28,3 @@ frame.lua
 casting.lua
 target.lua
 mirror.lua
-RomanNumeralConverter.lua

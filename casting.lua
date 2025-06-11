@@ -1,118 +1,102 @@
-local BS = AceLibrary("Babble-Spell-2.3")
 local elapsed = 0
 local OCB_CASTING = 1
 local OCB_CHANNELING = 2
 local OCB_FADEOUT = 3
 local OCB_CAST_SUCCESS = 4
 
-function oCB:GetSpellIcon(spell)
-	local icon, SpellIcon, ItemIcon, IsItem = nil, nil, nil, false
-	local OpeningItemName
-	
-	if spell == "Opening" or spell == "Opening - No Text" then
-		OpeningItemName = (getglobal("GameTooltipTextLeft1"):GetText() or "")
-		ItemIcon = self:FindItemIcon(OpeningItemName)
-	else
-		ItemIcon = self:FindItemIcon(spell)
-	end
-
-	if not SpellIcon and not ItemIcon then
-		if TradeSkillFrame and TradeSkillFrame:IsVisible() then
-			self:Debug("entering loop !")
-			
-			for i=1,GetNumTradeSkills() do
-				if GetTradeSkillInfo(i) == spell then
-					self:Debug("found! "..GetTradeSkillInfo(i))
-					SpellIcon = GetTradeSkillIcon(i)
-					
-					break
-				end
-			end
-			
-			if not SpellIcon then
-				self:Debug("Craft icon not found :(")
-			end 
-		elseif oCBTooltip then
-			ItemIcon = self:FindItemIcon(oCBTooltip)
-		end
+local function ToRomanNumerals(number)
+    if not number or number < 1 or number > 10 then
+		return ""
 	end
 	
-	IsItem = ItemIcon ~= nil
+    local romanValues = {{10, "X"}, {9, "IX"}, {5, "V"}, {4, "IV"}, {1, "I"}}
+    local result = ""
 	
-	if SpellIcon then
-		icon = SpellIcon
-	elseif ItemIcon then
-		icon = ItemIcon
-	end
+    for _, value in ipairs(romanValues) do
+        while number >= value[1] do
+            result = result .. value[2]
+            number = number - value[1]
+        end
+    end
 	
-	return icon, IsItem
+    return result
 end
 
 -- dIsInSeconds is passed by custom clients if they want to save on maths
 -- dontRegister is passed by custom clients if they need to call Stop/Failed/Delayed manually
-function oCB:SpellStart(s, d, dIsInSeconds, dontRegister, externalIcon)
+function oCB:CastStart(spellID, d, dIsInSeconds, dontRegister, externalIcon)
     local db = self.db.profile
     local Bar = self.frames.CastingBar
     local color = db.Colors.Casting
-
+    local Name, Rank
+    
+    if not spellID then
+        self:Debug("Invalid spellID, aborting CastStart")
+        return
+    end
+    
+    if type(spellID) == "string" then
+        Name = spellID
+    else
+        Name, Rank = SpellInfo(spellID)
+    end
+    
     if not dontRegister then
         self:RegisterEvent("SPELLCAST_STOP", "SpellStop")
         self:RegisterEvent("SPELLCAST_INTERRUPTED", "SpellFailed")
         self:RegisterEvent("SPELLCAST_FAILED", "SpellFailed")
         self:RegisterEvent("SPELLCAST_DELAYED", "SpellDelayed")
     end
-
-    self:Debug(string.format("SpellStart - %s | %s (%s)%s", s, d, dIsInSeconds and "s" or "ms", dontRegister and " | Not Registering" or ""))
+    
+    self:Debug(string.format("CastStart - %s | %s (%s)%s", Name, d, dIsInSeconds and "s" or "ms", dontRegister and " | Not Registering" or ""))
     self.startTime = GetTime()
     d = dIsInSeconds and d or d / 1000
     self.maxValue = self.startTime + d
-
-	-- if ToFu started a flight
+    
     if externalIcon == "Interface\\Icons\\Ability_Hunter_EagleEye" then
         color = db.Colors.FlyingTransport
     end
-	
-    s = s == "" and (getglobal("GameTooltipTextLeft1"):GetText() or "") or s
-
+    
+    Name = Name == "" and (getglobal("GameTooltipTextLeft1"):GetText() or "") or Name
+    
     if not db.CastingBar.hideIcon then
-        local icon, IsItem = self:GetSpellIcon(s)
-		
-        icon = oCBIcon and oCBName == s and oCBIcon or externalIcon or icon
-		
-        if IsItem or string.find(s, "^Recette") or string.find(s, "^Plans :") or string.find(s, "^Patron :") or string.find(s, "^Formule :") then
+        local icon, isItem = self:GetSpellIcon(spellID, Name)
+        
+        icon = oCBIcon or externalIcon or icon
+        
+        if isItem or string.find(Name, "^Recette") or string.find(Name, "^Plans :") or string.find(Name, "^Patron :") or string.find(Name, "^Formule :") then
             Bar.Latency:SetText("")
             Bar.LagBar:SetWidth(0)
             icon = icon or "Interface\\AddOns\\oCB\\Icons\\Spell_Arcane_MindMastery"
         elseif not db.lock then
             icon = icon or "Interface\\Icons\\Trade_Engineering"
         end
-		
+        
         Bar.Icon.Texture:SetTexture(icon)
     end
-
-    -- Spell rank
-    if db.CastingBar.spellShowRank and oCBRank then
-		local function getRankNumber(rankString)
-			local number = string.gsub(rankString, string.gsub(RANK_COLON, ":", "") .. " (%d+)", "%1")
-			return tonumber(number)
-		end
+    
+    local displayRank = nil
+    if db.CastingBar.spellShowRank and Rank and Rank ~= "" then
+        local rankNumber = tonumber(string.gsub(Rank, string.gsub(RANK_COLON, ":", "") .. " (%d+)", "%1"))
 		
-		local rank = getRankNumber(oCBRank)
-		
-		if db.CastingBar.spellRomanRank then
-			rank = ArabicToRoman(rank)
-		end
-		
-        s = s .. " " .. (db.CastingBar.spellShortRank and rank or "("..string.format(string.gsub(RANK_COLON, ":", " %%s"), rank)..")")
+        if rankNumber then
+            if db.CastingBar.spellRomanRank then
+                displayRank = ToRomanNumerals(rankNumber)
+            else
+                displayRank = tostring(rankNumber)
+            end
+			
+            Name = Name .. " " .. (db.CastingBar.spellShortRank and displayRank or "("..string.format(string.gsub(RANK_COLON, ":", " %%s"), displayRank)..")")
+        end
     end
-
-    Bar.Spell:SetText(s)
-
+    
+    Bar.Spell:SetText(Name)
+    
     if oCBCastSent and oCBCastSent > 0 then
         local mylatency = math.floor((GetTime() - oCBCastSent) * 1000)
         local w = Bar.Bar:GetWidth()
         local lagw = math.min(w, w - (w * (self.maxValue - self.startTime - (mylatency / 1000)) / (self.maxValue - self.startTime)))
-		
+        
         Bar.Latency:SetText(mylatency .. "ms")
         Bar.LagBar:SetStatusBarColor(1, 0, 0, 0.5)
         Bar.LagBar:SetMinMaxValues(0, 100)
@@ -122,15 +106,15 @@ function oCB:SpellStart(s, d, dIsInSeconds, dontRegister, externalIcon)
         Bar.Latency:SetText("")
         Bar.LagBar:SetValue(0)
     end
-
+    
     self.holdTime = 0
     self.delay = 0
     self.CastMode = OCB_CASTING
-
+    
     Bar.Bar:SetStatusBarColor(color.r, color.g, color.b)
     Bar.Bar:SetMinMaxValues(self.startTime, self.maxValue)
     Bar.Bar:SetValue(0)
-
+    
     self:ShowCastingBar()
 end
 
@@ -235,7 +219,7 @@ function oCB:OnCasting()
 		
 		if Now == oCB.endTime then
 			if not oCB.db.profile.lock then
-				oCB:SpellStart("Drag me", 3.5, true, true)
+				oCB:CastStart("Drag me", 3.5, true, true)
 				oCB.delay = 3.5
 			else
 				oCB:SpellChannelStop()
@@ -273,6 +257,7 @@ function oCB:SpellStop(dontUnregister)
 	
 	self.frames.CastingBar.Latency:SetText("")
 	self.frames.CastingBar.LagBar:SetValue(0)
+	oCBCastSent = 0
 	
 	if oCB.CastMode ~= OCB_CHANNELING then
 		local c = self.db.profile.Colors.Complete
@@ -321,61 +306,63 @@ function oCB:SpellFailed(dontUnregister)
 end
 
 function oCB:SpellChannelStart(d)
-	local Bar 	= self.frames.CastingBar
-	local db 	= self.db.profile
-	local c 		= db.Colors.Channel
-	
-	self:Debug("SpellChannelStart - Starting channel")
-	self:Debug("ChannelInfo - "..(oCBName or arg2).." - "..(oCBRank or "no rank").." - "..(oCBIcon or ""))
-	d = d / 1000
-	
-	self.startTime = GetTime()
-	self.endTime = self.startTime + d
-	self.maxValue = self.endTime
-	
-	Bar.Bar:SetStatusBarColor(c.r, c.g, c.b)
-	Bar.Bar:SetMinMaxValues(self.startTime, self.endTime)
-	Bar.Bar:SetValue(self.endTime)
-	
-	if oCBRank and db.CastingBar.spellShowRank then
-		if oCB:IsSpell(oCBName, oCBRank) then
-			self:Debug("Found: "..oCBName.." (Rank: "..oCBRank..")")
-			
-			if db.CastingBar.spellRomanRank then
-				local num = tonumber(oCBRank)
-				
-				if num and num > 0 then
-					oCBRank = ArabicToRoman(num)
-				end
-			end
-			
-			if not db.CastingBar.spellShortRank then
-				Bar.Spell:SetText(oCBName.." "..string.format(string.gsub(RANK_COLON, ":", "%%s"), oCBRank))
-			else
-				Bar.Spell:SetText(oCBName.." "..oCBRank)
-			end
-		else
-			Bar.Spell:SetText(oCBName or arg2)
-		end
-	else
-		Bar.Spell:SetText(oCBName or arg2)
-	end
-	
-	if not db.CastingBar.hideIcon then
-		Bar.Icon.Texture:SetTexture(oCBIcon)
-	end
-	
-	self.holdTime 		= 0
-	self.delay			= 0
-	oCB.CastMode	= OCB_CHANNELING -- ChannelStart
-
-	Bar.Time:SetText(oCB:FormatTime(math.max(oCB.maxValue, 0.0)))
-	Bar.Latency:SetText("")
-	Bar.Spark:Show()
-	Bar.Delay:SetText("")
-	Bar:SetAlpha(1)
-	Bar:Show()
-	self:SetIconVisibility(Bar, self.db.profile.CastingBar)
+    local Bar = self.frames.CastingBar
+    local db = self.db.profile
+    local c = db.Colors.Channel
+    
+    self:Debug("SpellChannelStart - Starting channel")
+    self:Debug("ChannelInfo - "..(oCBName or arg2).." - "..(oCBRank or "no rank").." - "..(oCBIcon or ""))
+    d = d / 1000
+    
+    self.startTime = GetTime()
+    self.endTime = self.startTime + d
+    self.maxValue = self.endTime
+    
+    Bar.Bar:SetStatusBarColor(c.r, c.g, c.b)
+    Bar.Bar:SetMinMaxValues(self.startTime, self.endTime)
+    Bar.Bar:SetValue(self.endTime)
+    
+    -- Обработка ранга
+    local displayRank = nil
+    if oCBRank and oCBRank ~= "" and db.CastingBar.spellShowRank then
+        -- Извлекаем число из ранга
+        local rankNumber = tonumber(string.gsub(oCBRank, string.gsub(RANK_COLON, ":", "") .. " (%d+)", "%1"))
+        if rankNumber then
+            if db.CastingBar.spellRomanRank then
+                displayRank = ToRomanNumerals(rankNumber)
+            else
+                displayRank = tostring(rankNumber)
+            end
+            
+            self:Debug("Found: "..oCBName.." (Rank: "..displayRank..")")
+            
+            if not db.CastingBar.spellShortRank then
+                Bar.Spell:SetText(oCBName.." ("..string.format(string.gsub(RANK_COLON, ":", "%%s"), displayRank)..")")
+            else
+                Bar.Spell:SetText(oCBName.." "..displayRank)
+            end
+        else
+            Bar.Spell:SetText(oCBName or arg2)
+        end
+    else
+        Bar.Spell:SetText(oCBName or arg2)
+    end
+    
+    if not db.CastingBar.hideIcon then
+        Bar.Icon.Texture:SetTexture(oCBIcon)
+    end
+    
+    self.holdTime = 0
+    self.delay = 0
+    oCB.CastMode = OCB_CHANNELING
+    
+    Bar.Time:SetText(oCB:FormatTime(math.max(oCB.maxValue, 0.0)))
+    Bar.Latency:SetText("")
+    Bar.Spark:Show()
+    Bar.Delay:SetText("")
+    Bar:SetAlpha(1)
+    Bar:Show()
+    self:SetIconVisibility(Bar, self.db.profile.CastingBar)
 end
 
 function oCB:SpellChannelUpdate(d)

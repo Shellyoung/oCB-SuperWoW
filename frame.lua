@@ -1,213 +1,228 @@
-function oCB:CreateFramework(b, n, s)
-	self.frames[b] = CreateFrame("Frame", n, UIParent)
-	self.frames[b]:SetFrameStrata("BACKGROUND")
-	self.frames[b]:Hide()
-	self.frames[b].name = b
-	self.frames[b]:SetMovable(true)
-	self.frames[b]:EnableMouse(false)
-	self.frames[b]:RegisterForDrag("LeftButton")
-	self.frames[b]:SetScript("OnDragStart", function() if not self.db.profile.lock then this:StartMoving() end end)
-	self.frames[b]:SetScript("OnDragStop", function() this:StopMovingOrSizing() self:savePosition() end)
-	
-	self.frames[b].Bar = CreateFrame("StatusBar", nil, self.frames[b])
-	
-	if (s ~="MirrorBar") and (s ~="TargetBar") then
-		self.frames[b].LagBar = CreateFrame("StatusBar", nil, self.frames[b])
-		self.frames[b].Delay = self.frames[b].Bar:CreateFontString(nil, "OVERLAY")
-		self.frames[b].Latency = self.frames[b].Bar:CreateFontString(nil, "OVERLAY")
+function oCB:CreateFramework(Frame, Name, Bar)
+	-- Create frame
+	local F = CreateFrame("Frame", Name, UIParent)
+	F:SetMovable(true)
+	F:EnableMouse(false)
+	F:RegisterForDrag("LeftButton")
+	F:SetScript("OnDragStart", function() if not self.db.profile.lock then this:StartMoving() end end)
+	F:SetScript("OnDragStop", function() this:StopMovingOrSizing() self:savePosition() end)
+	F:SetFrameStrata("BACKGROUND")
+	F:Hide()
+	F.name = Frame
+
+	-- Create components
+	F.Bar = CreateFrame("StatusBar", nil, F)
+
+	if (Bar ~="MirrorBar") and (Bar ~="TargetBar") then
+		F.LagBar = CreateFrame("StatusBar", nil, F)
+		F.Delay = F.Bar:CreateFontString(nil, "OVERLAY")
+		F.Latency = F.Bar:CreateFontString(nil, "OVERLAY")
 	end
-	
-	self.frames[b].Spark = CreateFrame("Frame", nil, self.frames[b])
-	self.frames[b].Spark.Texture = self.frames[b].Spark:CreateTexture(nil, "OVERLAY")
-	self.frames[b].Time = self.frames[b].Bar:CreateFontString(nil, "OVERLAY")
-	self.frames[b].Spell = self.frames[b].Bar:CreateFontString(nil, "OVERLAY")
-	self.frames[b].Icon = CreateFrame("Frame", nil, self.frames[b])
-	self.frames[b].Icon.Texture = self.frames[b].Icon:CreateTexture(nil, "OVERLAY")
-	self.frames[b].BarBackground = self.frames[b]:CreateTexture(nil, "BORDER")
-	
-	if (s =="MirrorBar") then
-		self.frames[b]:SetScript("OnUpdate", self.OnMirror)
-	elseif (s =="TargetBar") then
-		self.frames[b]:SetScript("OnUpdate", self.OnTargetCasting)
-	else
-		self.frames[b]:SetScript("OnUpdate", self.OnCasting)
-	end
-	
-	self:Layout(b, s)
+
+	F.Spark = CreateFrame("Frame", nil, F)
+	F.Spark.Texture = F.Spark:CreateTexture(nil, "OVERLAY")
+	F.Time = F.Bar:CreateFontString(nil, "OVERLAY")
+	F.Spell = F.Bar:CreateFontString(nil, "OVERLAY")
+	F.Icon = CreateFrame("Frame", nil, F)
+	F.Icon.Texture = F.Icon:CreateTexture(nil, "OVERLAY")
+	F.BarBackground = F:CreateTexture(nil, "BORDER")
+
+	-- Setup OnUpdate
+	local onUpdateHandlers = {
+		["MirrorBar"] = self.OnMirror,
+		["TargetBar"] = self.OnTargetCasting,
+		["CastingBar"] = self.OnCasting
+	}
+	F:SetScript("OnUpdate", onUpdateHandlers[Bar] or self.OnCasting)
+
+	-- Save and configure
+	self.frames[Frame] = F
+	self:Layout(Frame, Bar)
 end
 
-function oCB:Layout(b, s)
-	local db = self.db.profile[s or b]
-	local f, _ = GameFontHighlightSmall:GetFont()
-	
-	self.frames[b]:SetWidth(db.width+9)
-	self.frames[b]:SetHeight(db.height+10)
-	self.frames[b]:SetBackdrop({
-		bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", tile = true, tileSize = 16,
-		edgeFile = self.Borders[db.edgeFile], edgeSize = 10,
-		insets = {left = 4, right = 3, top = 3, bottom = 3},
-	})
-	
-	self.frames[b]:SetBackdropBorderColor(1, 1, 1)
-	self.frames[b]:SetBackdropColor(0, 0, 0, 0.5)
-	
-	self.frames[b].Bar:ClearAllPoints()
-	self.frames[b].Bar:SetPoint("RIGHT", self.frames[b], "RIGHT", -3, 0)
-	self.frames[b].Bar:SetWidth(db.width)
-	self.frames[b].Bar:SetHeight(db.height+3)
-	self.frames[b].Bar:SetFrameLevel(1)
-	self.frames[b].Bar:SetStatusBarTexture(self.Textures[db.texture])
-	
-	self.frames[b].BarBackground:SetAllPoints(self.frames[b].Bar)
-	self.frames[b].BarBackground:SetTexture(self.Textures[db.texture])
-	self.frames[b].BarBackground:SetTexCoord(0, 1, 1.3, 0)
-	self.frames[b].BarBackground:SetAlpha(0.4)
-	self.frames[b].BarBackground:SetVertexColor(0.6, 0.6, 0.6)
-	
-	self.frames[b].Icon:ClearAllPoints()
-	self.frames[b].Icon:SetPoint("RIGHT", self.frames[b], "LEFT", db.height+6, 0)
-	self.frames[b].Icon:SetWidth(db.height+3)
-	self.frames[b].Icon:SetHeight(db.height+3)
-	self.frames[b].Icon:SetBackdrop({
-		bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", tile = true, tileSize = 8,
-		edgeFile = "Interface\\AddOns\\oCB\\Backdrop\\PlainBackdrop", edgeSize = 1,
-		insets = {left = 1, right = 1, top = 1, bottom = 1},
-	})
-	self.frames[b].Icon:SetBackdropBorderColor(0, 0, 0, 0.7)
-	self.frames[b].Icon:SetBackdropColor(0, 0, 0, 0.4)
-	
-	self.frames[b].Icon.Texture:SetTexCoord(0.08,0.92,0.08,0.92)
-	self.frames[b].Icon.Texture:SetAllPoints(self.frames[b].Icon)
-	
-	if not self.frames[b].Icon.Texture:GetTexture() then
-		self.frames[b].Icon.Texture:SetTexture("Interface\\Icons\\Trade_Engineering")
-	end
-	
-	oCB:SetIconVisibility(self.frames[b], db)
-	
-	if not self.db.profile.lock then
-		local minvalue, maxvalue = self.frames[b].Bar:GetMinMaxValues()
-		local barvalue = self.frames[b].Bar:GetValue()
-		local widthAdd = 0
-		
-		if self.frames[b].Icon:IsVisible() then
-			widthAdd = db.height + 3
-		else
-			widthAdd = 0
-		end
-		
-		self.frames[b].Spark:SetPoint("CENTER", self.frames[b].Bar, "LEFT", (barvalue/maxvalue)*(db.width-widthAdd)+3, 0)
-	end
-	
-	self.frames[b].Spark:SetWidth(22)
-	self.frames[b].Spark:SetFrameLevel(3)
-	self.frames[b].Spark.Texture:SetAllPoints(self.frames[b].Spark)
-	self.frames[b].Spark.Texture:SetTexture("Interface\\CastingBar\\UI-CastingBar-Spark")
-	self.frames[b].Spark.Texture:SetBlendMode("ADD")
-	
-	
-	if s == "MirrorBar" then
-		self.frames[b].Spark:SetHeight(db.height*1.2)
-		self.frames[b].Spark.Texture:SetTexCoord(0,1,0.3,0.67)
-	else
-		self.frames[b].Spark:SetHeight(db.height*1.3)
-		self.frames[b].Spark.Texture:SetTexCoord(0,1,0.25,0.705)
-	end
-	
-	self.frames[b].Time:SetJustifyH("RIGHT")
-	self.frames[b].Time:SetFont(self.Fonts[db.timeFont],db.timeSize, (self.Outlines[db.timeOutline])..(db.timeFontMonochrome and "MONOCHROME" or ""))
-	self.frames[b].Time:SetShadowColor( 0, 0, 0, 0)
-	
-	if db.timeFontShadow then
-		self.frames[b].Time:SetShadowColor( 0, 0, 0, 1)
-	end
-	
-	self.frames[b].Time:SetShadowOffset(db.timeFontShadowOffsetX, db.timeFontShadowOffsetY)
-	self.frames[b].Time:SetText("Xx.Y / Xx.Y")
-	self.frames[b].Time:ClearAllPoints()
-	self.frames[b].Time:SetPoint("RIGHT", self.frames[b].Bar, "RIGHT",-8,1)
-	
-	self.frames[b].Spell:SetJustifyH("LEFT")
-	self.frames[b].Spell:SetWidth(db.width-self.frames[b].Time:GetWidth())
-	self.frames[b].Spell:SetFont(self.Fonts[db.spellFont], db.spellSize, (self.Outlines[db.spellOutline])..(db.spellFontMonochrome and "MONOCHROME" or ""))
-	self.frames[b].Spell:SetShadowColor( 0, 0, 0, 0)
-	
-	if db.spellFontShadow then
-		self.frames[b].Spell:SetShadowColor( 0, 0, 0, 1)
-	end
-	
-	self.frames[b].Spell:SetShadowOffset(db.spellFontShadowOffsetX, db.spellFontShadowOffsetY)
-	self.frames[b].Spell:ClearAllPoints()
-	self.frames[b].Spell:SetPoint("LEFT", self.frames[b].Bar, "LEFT", 15,1)
-	
-	if (s ~="MirrorBar") and (s ~="TargetBar") then
-		if db.hideLagBar then
-			self.frames[b].LagBar:Hide()
-		else
-			self.frames[b].LagBar:ClearAllPoints()
-			self.frames[b].LagBar:SetPoint("RIGHT", self.frames[b], "LEFT", db.width+5, 0)
-			self.frames[b].LagBar:SetWidth(0)
-			self.frames[b].LagBar:SetHeight(self.frames[b].Bar:GetHeight())
-			self.frames[b].LagBar:SetFrameLevel(0) --CHANGED from 1
-			self.frames[b].LagBar:SetValue(0)
-			self.frames[b].LagBar:SetStatusBarTexture(self.Textures[db.texture])
-			self.frames[b].LagBar:Show()
-		end
-	
-		self.frames[b].Delay:SetTextColor(1,0,0,1)
-		self.frames[b].Delay:SetJustifyH("RIGHT")
-		self.frames[b].Delay:SetFont(self.Fonts[db.delayFont], db.delaySize, (self.Outlines[db.delayOutline])..(db.delayFontMonochrome and "MONOCHROME" or ""))
-		self.frames[b].Delay:SetShadowColor( 0, 0, 0, 0)
-		
-		if db.delayFontShadow then
-			self.frames[b].Delay:SetShadowColor( 0, 0, 0, 1)
-		end
-		
-		self.frames[b].Delay:SetShadowOffset(db.delayFontShadowOffsetX, db.delayFontShadowOffsetY)
-		self.frames[b].Delay:SetText("X.Y")
-		self.frames[b].Delay:ClearAllPoints()
-		self.frames[b].Delay:SetPoint("RIGHT", self.frames[b], "RIGHT",-(db.width*(db.delayOffset/100)),1)
-		
-		self.frames[b].Latency:SetTextColor(0.36,0.36,0.36,0)
-		self.frames[b].Latency:SetJustifyH("RIGHT")
-		self.frames[b].Latency:SetFont(self.Fonts[db.latencyFont], db.latencySize, (self.Outlines[db.latencyOutline])..(db.latencyFontMonochrome and "MONOCHROME" or ""))
-		self.frames[b].Latency:SetShadowColor( 0, 0, 0, 0)
-		
-		if db.latencyFontShadow then
-			self.frames[b].Latency:SetShadowColor( 0, 0, 0, 1)
-		end
-		
-		self.frames[b].Latency:SetShadowOffset(db.latencyFontShadowOffsetX, db.latencyFontShadowOffsetY)
-		self.frames[b].Latency:SetText("420ms")
-		self.frames[b].Latency:ClearAllPoints()
-		self.frames[b].Latency:SetPoint("BOTTOMRIGHT", self.frames[b], "BOTTOMRIGHT", -3, 4)
-	end
-	
-	self:updatePositions(b)
+-- Setup font string properties
+function oCB:SetupFontString(String, font, size, outline, monochrome, shadow, offsetX, offsetY)
+    String:SetFont(font, size, outline .. (monochrome and "MONOCHROME" or ""))
+    String:SetShadowColor(0, 0, 0, shadow and 1 or 0)
+    String:SetShadowOffset(offsetX, offsetY)
 end
 
-function oCB:SetIconVisibility(Bar, db)
+function oCB:SetupFont(Font, Justify, Text, P, Rel, PRel, X, Y)
+	Font:SetJustifyH(Justify)
+
+	if Text then
+		Font:SetText(Text)
+	end
+
+	Font:ClearAllPoints()
+	Font:SetPoint(P, Rel, PRel, X, Y)
+end
+
+-- Setup spark properties
+function oCB:SetupSpark(spark, height, isMirrorBar)
+	spark:SetWidth(22)
+	spark:SetFrameLevel(3)
+	spark.Texture:SetAllPoints(spark)
+	spark.Texture:SetTexture("Interface\\CastingBar\\UI-CastingBar-Spark")
+	spark.Texture:SetBlendMode("ADD")
+	spark:SetHeight(height * (isMirrorBar and 1.2 or 1.3))
+	spark.Texture:SetTexCoord(0, 1, isMirrorBar and 0.3 or 0.25, isMirrorBar and 0.67 or 0.705)
+end
+
+function oCB:SetupStatusBar(Bar, Width, Height, Point, Rel, RelPoint, X, Y, FrameLevel, Texture)
+	Bar:ClearAllPoints()
+	Bar:SetPoint(Point, Rel, RelPoint, X, Y)
+    Bar:SetWidth(Width)
+    Bar:SetHeight(Height)
+	Bar:SetFrameLevel(FrameLevel)
+	Bar:SetStatusBarTexture(Texture)
+end
+
+function oCB:SetIconVisibility(F, db)
 	local w
 	
-	if not db.hideIcon and Bar.Icon.Texture:GetTexture() then
-		if not Bar.Icon:IsVisible() then
-			Bar.Icon:Show()
+	if not db.hideIcon and F.Icon.Texture:GetTexture() then
+		if not F.Icon:IsVisible() then
+			F.Icon:Show()
 		else
-			Bar.Icon:SetPoint("RIGHT", Bar, "LEFT", db.height+6, 0)
+			F.Icon:SetPoint("RIGHT", F, "LEFT", db.height+6, 0)
 		end
 		
 		w = db.width-db.height
 	else
-		if Bar.Icon:IsVisible() then
-			Bar.Icon:Hide()
+		if F.Icon:IsVisible() then
+			F.Icon:Hide()
 		else
-			Bar.Bar:SetPoint("RIGHT", Bar, "RIGHT", -3, 0)
+			F.Bar:SetPoint("RIGHT", F, "RIGHT", -3, 0)
 		end
 		
 		w = db.width+3
 	end
 	
-	Bar.Bar:SetWidth(w)
+	F.Bar:SetWidth(w)
+end
+
+function oCB:Layout(Frame, Bar)
+	-- Get profile settings and frame
+	local db = self.db.profile[Bar or Frame]
+	local F = self.frames[Frame]
+
+	-- Frame
+	F:SetWidth(db.width+9)
+	F:SetHeight(db.height+10)
+	F:SetBackdrop({
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", tile = true, tileSize = 16,
+        edgeFile = self.Borders[db.edgeFile], edgeSize = 10,
+        insets = {left = 4, right = 3, top = 3, bottom = 3},
+	})
+	F:SetBackdropBorderColor(1, 1, 1)
+	F:SetBackdropColor(0, 0, 0, 0.5)
+
+	self:SetupStatusBar(F.Bar, db.width, db.height+3, "RIGHT", F, "RIGHT", -3, 0, 1, self.Textures[db.texture])
+
+	-- Background
+	local BG = F.BarBackground
+	BG:SetAllPoints(F.Bar)
+	BG:SetTexture(self.Textures[db.texture])
+	BG:SetTexCoord(0, 1, 1.3, 0)
+	BG:SetAlpha(0.4)
+	BG:SetVertexColor(0.6, 0.6, 0.6)
+
+	-- Icon
+	F.Icon.Texture:SetTexCoord(0.08,0.92,0.08,0.92)
+	F.Icon.Texture:SetAllPoints(F.Icon)
+	F.Icon:ClearAllPoints()
+	
+	if not F.Icon.Texture:GetTexture() then
+		F.Icon.Texture:SetTexture("Interface\\Icons\\Trade_Engineering")
+	end
+	
+	F.Icon:SetPoint("RIGHT", F, "LEFT", db.height+6, 0)
+	F.Icon:SetWidth(db.height+3)
+	F.Icon:SetHeight(db.height+3)
+	F.Icon:SetBackdrop({
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", tile = true, tileSize = 8,
+        edgeFile = "Interface\\AddOns\\oCB\\Backdrop\\PlainBackdrop", edgeSize = 1,
+        insets = {left = 1, right = 1, top = 1, bottom = 1},
+	})
+	F.Icon:SetBackdropBorderColor(0, 0, 0, 0.7)
+	F.Icon:SetBackdropColor(0, 0, 0, 0.4)
+
+	oCB:SetIconVisibility(F, db)
+
+	if not self.db.profile.lock then
+		local Min, Max = F.Bar:GetMinMaxValues()
+		local Value = F.Bar:GetValue()
+		local widthAdd = 0
+
+		if F.Icon:IsVisible() then
+			widthAdd = db.height + 3
+		end
+
+		F.Spark:SetPoint("CENTER", F.Bar, "LEFT", (Value/Max)*(db.width-widthAdd)+3, 0)
+	end
+
+	-- Setup spark
+	self:SetupSpark(F.Spark, db.height, Bar == "MirrorBar")
+
+	-- Setup Time font
+	self:SetupFontString(F.Time,
+		self.Fonts[db.timeFont],
+		db.timeSize,
+		self.Outlines[db.timeOutline],
+		db.timeFontMonochrome,
+		db.timeFontShadow,
+		db.timeFontShadowOffsetX,
+		db.timeFontShadowOffsetY)
+	oCB:SetupFont(F.Time, "RIGHT", "Xx.Y / Xx.Y", "RIGHT", F.Bar, "RIGHT", -8, 1)
+
+	-- Setup Spell font
+	self:SetupFontString(F.Spell,
+		self.Fonts[db.spellFont],
+		db.spellSize,
+		self.Outlines[db.spellOutline],
+		db.spellFontMonochrome,
+		db.spellFontShadow,
+		db.spellFontShadowOffsetX,
+		db.spellFontShadowOffsetY)
+	oCB:SetupFont(F.Spell, "LEFT", nil, "LEFT", F.Bar, "LEFT", 15, 1)
+	F.Spell:SetWidth(db.width-F.Time:GetWidth())
+
+	if (Bar ~="MirrorBar") and (Bar ~="TargetBar") then
+		if db.hideLagBar then
+			F.LagBar:Hide()
+		else
+			self:SetupStatusBar(F.LagBar, 0, F.Bar:GetHeight(), "RIGHT", F, "LEFT", db.width+5, 0, 0, self.Textures[db.texture])
+			F.LagBar:SetValue(0)
+			F.LagBar:Show()
+		end
+    
+        -- Setup Delay font
+		self:SetupFontString(F.Delay,
+			self.Fonts[db.delayFont],
+			db.delaySize,
+			self.Outlines[db.delayOutline],
+			db.delayFontMonochrome,
+			db.delayFontShadow,
+			db.delayFontShadowOffsetX,
+			db.delayFontShadowOffsetY)
+		oCB:SetupFont(F.Delay, "RIGHT", "X.Y", "RIGHT", F, "RIGHT", -(db.width*(db.delayOffset/100)), 1)
+		F.Delay:SetTextColor(1, 0, 0, 1)
+        
+        -- Setup Latency font
+		self:SetupFontString(F.Latency,
+			self.Fonts[db.latencyFont],
+			db.latencySize,
+			self.Outlines[db.latencyOutline],
+			db.latencyFontMonochrome,
+			db.delayFontShadow,
+			db.latencyFontShadowOffsetX,
+			db.latencyFontShadowOffsetY)
+		oCB:SetupFont(F.Latency, "RIGHT", "420ms", "BOTTOMRIGHT", F, "BOTTOMRIGHT", -3, 4)
+		F.Latency:SetTextColor(0.36, 0.36, 0.36, 0)
+	end
+
+	self:updatePositions(Frame)
 end
 
 function oCB:ShowBlizzCB()
