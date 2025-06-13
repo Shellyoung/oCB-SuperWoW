@@ -5,6 +5,8 @@ local OCB_FADEOUT = 3
 local OCB_CAST_SUCCESS = 4
 
 local function ToRomanNumerals(number)
+	number = tonumber(number)
+	
     if not number or number < 1 or number > 10 then
 		return ""
 	end
@@ -77,7 +79,7 @@ function oCB:CastStart(spellID, d, dIsInSeconds, dontRegister, externalIcon)
     
     local displayRank = nil
     if db.CastingBar.spellShowRank and Rank and Rank ~= "" then
-        local rankNumber = tonumber(string.gsub(Rank, string.gsub(RANK_COLON, ":", "") .. " (%d+)", "%1"))
+        local _, _, rankNumber = string.find(Rank or "", "(%d+)")
 		
         if rankNumber then
             if db.CastingBar.spellRomanRank then
@@ -86,7 +88,7 @@ function oCB:CastStart(spellID, d, dIsInSeconds, dontRegister, externalIcon)
                 displayRank = tostring(rankNumber)
             end
 			
-            Name = Name .. " " .. (db.CastingBar.spellShortRank and displayRank or "("..string.format(string.gsub(RANK_COLON, ":", " %%s"), displayRank)..")")
+            Name = Name .. " " .. (db.CastingBar.spellShortRank and displayRank or "(" .. RANK_COLON .. " " .. displayRank .. ")")
         end
     end
     
@@ -326,7 +328,8 @@ function oCB:SpellChannelStart(d)
     local displayRank = nil
     if oCBRank and oCBRank ~= "" and db.CastingBar.spellShowRank then
         -- Извлекаем число из ранга
-        local rankNumber = tonumber(string.gsub(oCBRank, string.gsub(RANK_COLON, ":", "") .. " (%d+)", "%1"))
+        local _, _, rankNumber = string.find(oCBRank or "", "(%d+)")
+		
         if rankNumber then
             if db.CastingBar.spellRomanRank then
                 displayRank = ToRomanNumerals(rankNumber)
@@ -334,12 +337,12 @@ function oCB:SpellChannelStart(d)
                 displayRank = tostring(rankNumber)
             end
             
-            self:Debug("Found: "..oCBName.." (Rank: "..displayRank..")")
+            self:Debug("Found: "..oCBName.." ("..RANK_COLON.." "..displayRank..")")
             
-            if not db.CastingBar.spellShortRank then
-                Bar.Spell:SetText(oCBName.." ("..string.format(string.gsub(RANK_COLON, ":", "%%s"), displayRank)..")")
+            if db.CastingBar.spellShortRank then
+				Bar.Spell:SetText(oCBName.." "..displayRank)
             else
-                Bar.Spell:SetText(oCBName.." "..displayRank)
+                Bar.Spell:SetText(oCBName.." (" .. RANK_COLON .. " " .. displayRank .. ")")
             end
         else
             Bar.Spell:SetText(oCBName or arg2)
