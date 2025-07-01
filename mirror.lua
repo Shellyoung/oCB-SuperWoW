@@ -1,8 +1,8 @@
 local elapsed = 0
-local BS = AceLibrary("Babble-Spell-2.3")
+local BS = AceLibrary('Babble-Spell-2.3')
 
 function oCB:MIRROR_TIMER_START(type, value, maxValue, scale, pause, text)
-	self:Debug("MIRROR_TIMER_START - %s | %s | %s | %s | %s | %s", type, value, maxValue, scale, pause, text)
+	self:Debug('MIRROR_TIMER_START - %s | %s | %s | %s | %s | %s', type, value, maxValue, scale, pause, text)
 	
 	oCB.frames[type].value = (value / 1000)
 	oCB.frames[type].scale = scale
@@ -14,13 +14,13 @@ function oCB:MIRROR_TIMER_START(type, value, maxValue, scale, pause, text)
 	end
 	
 	if text == BREATH_LABEL then
-		oCB.frames[type].Icon.Texture:SetTexture("Interface/Icons/spell_shadow_demonbreath")
+		oCB.frames[type].Icon.Texture:SetTexture('Interface/Icons/spell_shadow_demonbreath')
 		oCB.frames[type].Icon:Show()
 	elseif text == EXHAUSTION_LABEL then
-		oCB.frames[type].Icon.Texture:SetTexture("Interface/Icons/Ability_Suffocate")
+		oCB.frames[type].Icon.Texture:SetTexture('Interface/Icons/Ability_Suffocate')
 		oCB.frames[type].Icon:Show()
-	elseif text == BS["Feign Death"] then
-		oCB.frames[type].Icon.Texture:SetTexture("Interface/Icons/Ability_Rogue_FeignDeath")
+	elseif text == BS['Feign Death'] then
+		oCB.frames[type].Icon.Texture:SetTexture('Interface/Icons/Ability_Rogue_FeignDeath')
 		oCB.frames[type].Icon:Show()
 	end
 	
@@ -48,7 +48,7 @@ function oCB:MIRROR_TIMER_PAUSE(pause)
 end
 
 function oCB:MIRROR_TIMER_STOP(type)
-	self:Debug("MIRROR_TIMER_STOP - %s", type)
+	self:Debug('MIRROR_TIMER_STOP - %s', type)
 	
 	oCB.frames[type]:Hide()
 end
@@ -69,6 +69,6 @@ function oCB:OnMirror()
 		this.Spark:Hide()
 	else
 		this.Time:SetText(oCB:FormatTime( math.max(this.value)))
-		this.Spark:SetPoint("CENTER", this.Bar, "LEFT", sp, 0)
+		this.Spark:SetPoint('CENTER', this.Bar, 'LEFT', sp, 0)
 	end
 end

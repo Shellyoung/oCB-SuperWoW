@@ -1,9 +1,9 @@
-<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
-..\FrameXML\UI.xsd">
-	<GameTooltip name="oCB_Tooltip" frameStrata="TOOLTIP" inherits="GameTooltipTemplate" hidden="true">
+<Ui xmlns='http://www.blizzard.com/wow/ui/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd'>
+	<GameTooltip name='oCB_Tooltip' frameStrata='TOOLTIP' inherits='GameTooltipTemplate' hidden='true'>
 		<Scripts>
 			<OnLoad>
-				this:SetOwner(UIParent, "ANCHOR_NONE")
+				this:SetOwner(UIParent, 'ANCHOR_NONE')
 			</OnLoad>
 		</Scripts>
 	</GameTooltip>
