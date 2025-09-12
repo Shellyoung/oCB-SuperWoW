@@ -320,6 +320,10 @@ function oCB:SpellChannelStart(ID, Duration)
     local db = self.db.profile
     local c = db.Colors.Channel
 	local Name, Rank, Icon = SpellInfo(ID)
+	
+	if not Name then
+		Name = ''
+	end
     
     self:Debug('SpellChannelStart - Starting channel')
     self:Debug('ChannelInfo - '..(Name)..' - '..(Rank or 'No rank')..' - '..(oCBIcon or ''))
