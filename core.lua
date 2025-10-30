@@ -1356,6 +1356,7 @@ end
 function oCB:Events()
 	self:RegisterEvent('UNIT_CASTEVENT', 'CastEvent')
 
+	self:RegisterEvent('SPELLCAST_CHANNEL_START', 'SpellChannelStartBlizzard')
 	self:RegisterEvent('SPELLCAST_CHANNEL_STOP', 'SpellChannelStop')
 	self:RegisterEvent('SPELLCAST_CHANNEL_UPDATE', 'SpellChannelUpdate')
 	
@@ -1459,7 +1460,7 @@ function oCB:CastEvent(casterGUID, targetGUID, eventType, spellID, castDuration)
 			if eventType == 'START' then
 				oCB:CastStart(spellID, castDuration, false)
 			elseif eventType == 'CHANNEL' then
-				oCB:SpellChannelStart(spellID, castDuration)
+				oCB:SpellChannelStart(spellID, castDuration, eventType, casterGUID, targetGUID)
 			end
 		end
         

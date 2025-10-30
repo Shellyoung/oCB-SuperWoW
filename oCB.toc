@@ -3,7 +3,7 @@
 ## Author: Haste, Athene, Laytya, Roadblock, Shellyoung, Grok (xAI)
 ## Notes: A player castbar replacement and target cast bar.
 ## Notes-frFR: Remplacement de la barre de cast et barre de cast de cible.
-## Version: 3.8
+## Version: 3.8.2
 ## DefaultState: Enabled
 ## OptionalDeps: Ace2, DewdropLib
 ## LoadOnDemand: 0

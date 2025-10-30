@@ -315,7 +315,7 @@ function oCB:SpellFailed(dontUnregister)
     end
 end
 
-function oCB:SpellChannelStart(ID, Duration)
+function oCB:SpellChannelStart(ID, Duration, eventType, casterGUID, targetGUID)
     local Bar = self.frames.CastingBar
     local db = self.db.profile
     local c = db.Colors.Channel
@@ -376,6 +376,11 @@ function oCB:SpellChannelStart(ID, Duration)
     self.holdTime = 0
     self.delay = 0
     oCB.CastMode = OCB_CHANNELING
+	
+	Bar.eventType = eventType
+	Bar.casterGUID = casterGUID
+	Bar.targetGUID = targetGUID
+	Bar.spellID = ID
     
     Bar.Time:SetText(oCB:FormatTime(math.max(oCB.maxValue, 0.0)))
     Bar.Latency:SetText('')
@@ -384,6 +389,19 @@ function oCB:SpellChannelStart(ID, Duration)
     Bar:SetAlpha(1)
     Bar:Show()
     self:SetIconVisibility(Bar, self.db.profile.CastingBar)
+end
+
+function oCB:SpellChannelStartBlizzard(Duration, Name)
+	self.endTime = self.startTime + Duration / 1000
+	self.maxValue = self.endTime
+	
+	local Bar = self.frames.CastingBar
+    
+    Bar.Bar:SetMinMaxValues(self.startTime, self.endTime)
+    Bar.Bar:SetValue(self.endTime)
+	Bar.Time:SetText(oCB:FormatTime(math.max(oCB.maxValue, 0.0)))
+	
+	oCB:TargetCastStart(Bar.casterGUID, Bar.targetGUID, Bar.eventType, Bar.spellID, Duration)
 end
 
 function oCB:SpellChannelUpdate(d)
