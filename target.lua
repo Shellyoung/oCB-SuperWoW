@@ -793,7 +793,9 @@ function oCB:TargetCastStart(casterGUID, targetGUID, eventType, spellID, castDur
         silence = Spells[spell].m
     end
 
-    Casters[casterGUID] = {cast = spell, spellID = spellID, starttime = now, casttime = casttime, icon = icon, casting = true, silence = silence, channeling = channeling}
+	if Casters and casterGUID then
+		Casters[casterGUID] = {cast = spell, spellID = spellID, starttime = now, casttime = casttime, icon = icon, casting = true, silence = silence, channeling = channeling}
+	end
 
     if exists and not UnitIsDeadOrGhost('target') and targetGUID == casterGUID then
 		if casttime > 0 then
