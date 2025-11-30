@@ -1,7 +1,7 @@
 # otravi Cast Bar with SuperWoW support
 A player castbar replacement as well as a target castbar for World of Warcraft vanilla with [SuperWoW](https://github.com/balakethelock/SuperWoW) installed.
 
-<sub>version 3.8.2</sub>
+<sub>version 3.8.3</sub>
 
 ![WoW 20-20 28 04 2025](https://github.com/user-attachments/assets/34d65f41-b102-4690-aa7a-68ca45f1b8cd)
 
